@@ -331,7 +331,62 @@ function utilizedBudgetView() {
   );
 }
 
-function departmentAdd() {}
+function departmentAdd() {
+  inquirer
+    .prompt([
+      {
+        name: "department",
+        type: "input",
+        message: "What Department Would You Like to Add?",
+      },
+    ])
+    .then(function (answer) {
+      connection.query(
+        `Select count(*) DeptCount from department where name = '${answer.department}'`,
+        (err, res) => {
+          if (err) throw err;
+          if (res[0].DeptCount > 0) {
+            console.log("Department Already Exists");
+            inquirer
+              .prompt([
+                {
+                  name: "continue",
+                  type: "list",
+                  message:
+                    "Would You Like to Return to the Main Menu or Continue Adding?",
+                  choices: ["Main Menu", "Continue Adding"],
+                },
+              ])
+              .then((data) => {
+                if (data.continue === "Main Menu") {
+                  menu();
+                } else add();
+              });
+          } else {
+            connection.query(
+              `insert into department (name) VALUES ('${answer.department}')`
+            ),
+              console.log(`${answer.department} Has Been Added`);
+            inquirer
+              .prompt([
+                {
+                  name: "continue",
+                  type: "list",
+                  message:
+                    "Would You Like to Return to the Main Menu or Continue Adding?",
+                  choices: ["Main Menu", "Continue Adding"],
+                },
+              ])
+              .then((data) => {
+                if (data.continue === "Main Menu") {
+                  menu();
+                } else add();
+              });
+          }
+        }
+      );
+    });
+}
 
 function roleAdd() {}
 
