@@ -337,15 +337,339 @@ function roleAdd() {}
 
 function employeeAdd() {}
 
-function empRoleUpdate() {}
+function empRoleUpdate() {
+  connection.query(
+    "select CONCAT(first_name, ' ', last_name) EmployeeName from employee;",
+    (err, res) => {
+      if (err) throw err;
+      inquirer
+        .prompt([
+          {
+            name: "employee",
+            type: "list",
+            choices: function () {
+              let empArray = [];
+              for (let i = 0; i < res.length; i++) {
+                empArray.push(res[i].EmployeeName);
+              }
+              return empArray;
+            },
+            message: "What Employee's Manager Would You Like to Update?",
+          },
+        ])
+        .then(function (answer) {
+          let empName;
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].EmployeeName === answer.employee) {
+              empName = res[i];
+            }
+          }
+          connection.query("select title from role;", (err, res) => {
+            if (err) throw err;
+            inquirer
+              .prompt([
+                {
+                  name: "role",
+                  type: "list",
+                  choices: function () {
+                    let choiceArray = [];
+                    for (let i = 0; i < res.length; i++) {
+                      choiceArray.push(res[i].title);
+                    }
+                    return choiceArray;
+                  },
+                  message: "What Is the Employee's New Role?",
+                },
+              ])
+              .then(function (answer) {
+                let roleName;
+                for (let i = 0; i < res.length; i++) {
+                  if (res[i].title === answer.role) {
+                    roleName = res[i];
+                  }
+                }
+                connection.query(
+                  `update employee set role_id = (select id from role where title = '${roleName.title}') where CONCAT(first_name, ' ', last_name) = '${empName.EmployeeName}'`,
+                  (err, res) => {
+                    if (err) throw err;
+                    console.log(
+                      `${empName.EmployeeName}'s Role Has Been Update to ${roleName.title}`
+                    );
+                    console.log("\n");
+                    inquirer
+                      .prompt([
+                        {
+                          name: "continue",
+                          type: "list",
+                          message:
+                            "Would You Like to Return to the Main Menu or Continue Updating?",
+                          choices: ["Main Menu", "Continue Updating"],
+                        },
+                      ])
+                      .then((data) => {
+                        if (data.continue === "Main Menu") {
+                          menu();
+                        } else upd();
+                      });
+                  }
+                );
+              });
+          });
+        });
+    }
+  );
+}
 
-function empManagerUpdate() {}
+function empManagerUpdate() {
+  connection.query(
+    "select CONCAT(first_name, ' ', last_name) EmployeeName from employee;",
+    (err, res) => {
+      if (err) throw err;
+      inquirer
+        .prompt([
+          {
+            name: "employee",
+            type: "list",
+            choices: function () {
+              let empArray = [];
+              for (let i = 0; i < res.length; i++) {
+                empArray.push(res[i].EmployeeName);
+              }
+              return empArray;
+            },
+            message: "What Employee's Manager Would You Like to Update?",
+          },
+        ])
+        .then(function (answer) {
+          let empName;
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].EmployeeName === answer.employee) {
+              empName = res[i];
+            }
+          }
+          connection.query(
+            "select CONCAT(first_name, ' ', last_name) ManagerName from employee;",
+            (err, res) => {
+              if (err) throw err;
+              inquirer
+                .prompt([
+                  {
+                    name: "manager",
+                    type: "list",
+                    choices: function () {
+                      let choiceArray = [];
+                      for (let i = 0; i < res.length; i++) {
+                        choiceArray.push(res[i].ManagerName);
+                      }
+                      return choiceArray;
+                    },
+                    message: "Who Is the Employee's New Manager?",
+                  },
+                ])
+                .then(function (answer) {
+                  let manName;
+                  for (let i = 0; i < res.length; i++) {
+                    if (res[i].ManagerName === answer.manager) {
+                      manName = res[i];
+                    }
+                  }
+                  connection.query(
+                    `with manager (id) as (select id from employee where CONCAT(first_name, ' ', last_name) = '${manName.ManagerName}') update employee set manager_id = (select id from manager) where concat(first_name, ' ', last_name) = '${empName.EmployeeName}'`,
+                    (err, res) => {
+                      if (err) throw err;
+                      console.log(
+                        `${empName.EmployeeName}'s Manager Has Been Update to ${manName.ManagerName}`
+                      );
+                      console.log("\n");
+                      inquirer
+                        .prompt([
+                          {
+                            name: "continue",
+                            type: "list",
+                            message:
+                              "Would You Like to Return to the Main Menu or Continue Updating?",
+                            choices: ["Main Menu", "Continue Updating"],
+                          },
+                        ])
+                        .then((data) => {
+                          if (data.continue === "Main Menu") {
+                            menu();
+                          } else upd();
+                        });
+                    }
+                  );
+                });
+            }
+          );
+        });
+    }
+  );
+}
 
-function deptDelete() {}
+function deptDelete() {
+  connection.query("select name from department;", (err, res) => {
+    if (err) throw err;
 
-function roleDelete() {}
+    inquirer
+      .prompt([
+        {
+          name: "department",
+          type: "list",
+          choices: function () {
+            let choiceArray = [];
+            for (let i = 0; i < res.length; i++) {
+              choiceArray.push(res[i].name);
+            }
+            return choiceArray;
+          },
+          message: "What Department Would You Like to Delete?",
+        },
+      ])
+      .then(function (answer) {
+        let chosenItem;
+        for (let i = 0; i < res.length; i++) {
+          if (res[i].name === answer.department) {
+            chosenItem = res[i];
+          }
+        }
+        connection.query(
+          "delete from department d where d.name = ?",
+          chosenItem.name,
+          (err, res) => {
+            if (err) throw err;
+            console.log(`${chosenItem.name} Has Been Deleted`);
+            console.log("\n");
+            inquirer
+              .prompt([
+                {
+                  name: "continue",
+                  type: "list",
+                  message:
+                    "Would You Like to Return to the Main Menu or Continue Deleting?",
+                  choices: ["Main Menu", "Continue Deleting"],
+                },
+              ])
+              .then((data) => {
+                if (data.continue === "Main Menu") {
+                  menu();
+                } else del();
+              });
+          }
+        );
+      });
+  });
+}
 
-function empDelete() {}
+function roleDelete() {
+  connection.query("select title from role;", (err, res) => {
+    if (err) throw err;
+
+    inquirer
+      .prompt([
+        {
+          name: "role",
+          type: "list",
+          choices: function () {
+            let choiceArray = [];
+            for (let i = 0; i < res.length; i++) {
+              choiceArray.push(res[i].title);
+            }
+            return choiceArray;
+          },
+          message: "What Role Would You Like to Delete?",
+        },
+      ])
+      .then(function (answer) {
+        let chosenItem;
+        for (let i = 0; i < res.length; i++) {
+          if (res[i].title === answer.role) {
+            chosenItem = res[i];
+          }
+        }
+        connection.query(
+          "delete from role r where r.title = ?",
+          chosenItem.title,
+          (err, res) => {
+            if (err) throw err;
+            console.log(`${chosenItem.title} Has Been Deleted`);
+            console.log("\n");
+            inquirer
+              .prompt([
+                {
+                  name: "continue",
+                  type: "list",
+                  message:
+                    "Would You Like to Return to the Main Menu or Continue Deleting?",
+                  choices: ["Main Menu", "Continue Deleting"],
+                },
+              ])
+              .then((data) => {
+                if (data.continue === "Main Menu") {
+                  menu();
+                } else del();
+              });
+          }
+        );
+      });
+  });
+}
+
+function empDelete() {
+  connection.query(
+    "select CONCAT(first_name, ' ', last_name) EmployeeName from employee;",
+    (err, res) => {
+      if (err) throw err;
+
+      inquirer
+        .prompt([
+          {
+            name: "employee",
+            type: "list",
+            choices: function () {
+              let choiceArray = [];
+              for (let i = 0; i < res.length; i++) {
+                choiceArray.push(res[i].EmployeeName);
+              }
+              return choiceArray;
+            },
+            message: "What Employee Would You Like to Delete?",
+          },
+        ])
+        .then(function (answer) {
+          let chosenItem;
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].EmployeeName === answer.employee) {
+              chosenItem = res[i];
+            }
+          }
+          connection.query(
+            "delete from employee  where concat(first_name, ' ', last_name) = ?",
+            chosenItem.EmployeeName,
+            (err, res) => {
+              if (err) throw err;
+              console.log(`${chosenItem.EmployeeName} Has Been Deleted`);
+              console.log("\n");
+              inquirer
+                .prompt([
+                  {
+                    name: "continue",
+                    type: "list",
+                    message:
+                      "Would You Like to Return to the Main Menu or Continue Deleting?",
+                    choices: ["Main Menu", "Continue Deleting"],
+                  },
+                ])
+                .then((data) => {
+                  if (data.continue === "Main Menu") {
+                    menu();
+                  } else del();
+                });
+            }
+          );
+        });
+    }
+  );
+}
 
 connection.connect((err) => {
   if (err) throw err;

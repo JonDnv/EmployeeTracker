@@ -7,6 +7,7 @@
 - [Employee Tracker](#employee-tracker)
   - [Table of Contents](#table-of-contents)
   - [Description](#description)
+  - [Mock-Up](#mock-up)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Contributing](#contributing)
@@ -17,6 +18,10 @@
 ## Description
 
 Application allows the employer to add, remove, and search for employee information via a CLI.
+
+## Mock-Up
+
+![Application]()
 
 ## Installation
 
