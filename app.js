@@ -249,11 +249,87 @@ function employeeByManagerView() {
     (err, res) => {
       if (err) throw err;
 
+      inquirer
+        .prompt([
+          {
+            name: "supervisor",
+            type: "list",
+            choices: function () {
+              let choiceArray = [];
+              for (let i = 0; i < res.length; i++) {
+                choiceArray.push(res[i].ManagerName);
+              }
+              return choiceArray;
+            },
+            message: "What Supervisor's Employees Would You Like to View?",
+          },
+        ])
+        .then(function (answer) {
+          let chosenItem;
+          for (let i = 0; i < res.length; i++) {
+            if (res[i].ManagerName === answer.supervisor) {
+              chosenItem = res[i];
+            }
+          }
+          connection.query(
+            "select concat(e.first_name, ' ', e.last_name) 'Employee Name', d.name 'Department', r.title 'Title', r.salary 'Salary' from employee e left join role r on e.role_id = r.id left join department d on r.department_id = d.id where manager_id = (select id from employee where CONCAT(first_name, ' ', last_name) = ?)",
+            chosenItem.ManagerName,
+            (err, res) => {
+              if (err) throw err;
+              console.log("\n");
+              console.table(
+                `Employees Supervised by ${chosenItem.ManagerName}`,
+                res
+              );
+              console.log("\n");
+              inquirer
+                .prompt([
+                  {
+                    name: "continue",
+                    type: "list",
+                    message:
+                      "Would You Like to Return to the Main Menu or Continue Searching?",
+                    choices: ["Main Menu", "Continue Searching"],
+                  },
+                ])
+                .then((data) => {
+                  if (data.continue === "Main Menu") {
+                    menu();
+                  } else vw();
+                });
+            }
+          );
+        });
     }
   );
 }
 
-function utilizedBudgetView() {}
+function utilizedBudgetView() {
+  connection.query(
+    "select d.name 'Department', sum(r.salary) 'Utilized Budget' from department d left join role r on d.id = r.department_id group by d.name",
+    (err, res) => {
+      if (err) throw err;
+      console.log("\n");
+      console.table("Budget Utilization Per Department", res);
+      console.log("\n");
+      inquirer
+        .prompt([
+          {
+            name: "continue",
+            type: "list",
+            message:
+              "Would You Like to Return to the Main Menu or Continue Searching?",
+            choices: ["Main Menu", "Continue Searching"],
+          },
+        ])
+        .then((data) => {
+          if (data.continue === "Main Menu") {
+            menu();
+          } else vw();
+        });
+    }
+  );
+}
 
 function departmentAdd() {}
 
