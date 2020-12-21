@@ -21,7 +21,7 @@ Application allows the employer to add, remove, and search for employee informat
 
 ## Mock-Up
 
-[Video Walk-Through]()
+[Video Walk-Through](https://drive.google.com/file/d/1lpoxyoIbq2Z-vTOs18YUH1yUZ8EzlDhN/view?usp=sharing)
 
 ## Installation
 
