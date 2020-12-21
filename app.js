@@ -388,9 +388,215 @@ function departmentAdd() {
     });
 }
 
-function roleAdd() {}
+function roleAdd() {
+  let role;
+  let department;
+  let salary;
+  inquirer
+    .prompt([
+      {
+        name: "role",
+        type: "input",
+        message: "What Role Would You Like to Add?",
+      },
+    ])
+    .then(function (answer) {
+      role = answer.role;
+      connection.query(
+        `Select count(*) RoleCount from role where title = '${answer.role}'`,
+        (err, res) => {
+          if (err) throw err;
+          if (res[0].RoleCount > 0) {
+            console.log("Role Already Exists");
+            inquirer
+              .prompt([
+                {
+                  name: "continue",
+                  type: "list",
+                  message:
+                    "Would You Like to Return to the Main Menu or Continue Adding?",
+                  choices: ["Main Menu", "Continue Adding"],
+                },
+              ])
+              .then((data) => {
+                if (data.continue === "Main Menu") {
+                  menu();
+                } else add();
+              });
+          } else {
+            inquirer
+              .prompt([
+                {
+                  name: "salary",
+                  type: "number",
+                  message: "What is the Salary for this Role?",
+                },
+              ])
+              .then((answer) => {
+                salary = parseInt(answer.salary);
+                connection.query("select name from department;", (err, res) => {
+                  if (err) throw err;
+                  inquirer
+                    .prompt([
+                      {
+                        name: "department",
+                        type: "list",
+                        message: "What Department Does This Role Belong To?",
+                        choices: function () {
+                          let deptArray = [];
+                          for (let i = 0; i < res.length; i++) {
+                            deptArray.push(res[i].name);
+                          }
+                          return deptArray;
+                        },
+                      },
+                    ])
+                    .then((answer) => {
+                      department = answer.department;
+                      connection.query(
+                        `insert into role(title, salary, department_id) values ('${role}', ${salary}, (select id from department where name = '${department}'))`,
+                        (err, res) => {
+                          if (err) throw err;
+                          console.log(`${role} Has Been Added`);
+                          inquirer
+                            .prompt([
+                              {
+                                name: "continue",
+                                type: "list",
+                                message:
+                                  "Would You Like to Return to the Main Menu or Continue Adding?",
+                                choices: ["Main Menu", "Continue Adding"],
+                              },
+                            ])
+                            .then((data) => {
+                              if (data.continue === "Main Menu") {
+                                menu();
+                              } else add();
+                            });
+                        }
+                      );
+                    });
+                });
+              });
+          }
+        }
+      );
+    });
+}
 
-function employeeAdd() {}
+function employeeAdd() {
+  let fName;
+  let lName;
+  let role;
+  let manager;
+  inquirer
+    .prompt([
+      {
+        name: "firstName",
+        type: "input",
+        message: "What is the Employee's First Name",
+      },
+      {
+        name: "lastName",
+        type: "input",
+        message: "What is the Employee's Last Name",
+      },
+    ])
+    .then((data) => {
+      fName = data.firstName;
+      lName = data.lastName;
+      connection.query(
+        `Select count(*) EmpCount from employee where first_name = '${fName}' & last_name = '${lName}'`,
+        (err, res) => {
+          if (err) throw err;
+          if (res[0].EmpCount > 0) {
+            console.log("Employee Already Exists");
+            inquirer
+              .prompt([
+                {
+                  name: "continue",
+                  type: "list",
+                  message:
+                    "Would You Like to Return to the Main Menu or Continue Adding?",
+                  choices: ["Main Menu", "Continue Adding"],
+                },
+              ])
+              .then((data) => {
+                if (data.continue === "Main Menu") {
+                  menu();
+                } else add();
+              });
+          } else {
+            connection.query("select title from role;", (err, res) => {
+              if (err) throw err;
+              inquirer
+                .prompt([
+                  {
+                    name: "role",
+                    type: "list",
+                    choices: function () {
+                      let roleArray = [];
+                      for (let i = 0; i < res.length; i++) {
+                        roleArray.push(res[i].title);
+                      }
+                      return roleArray;
+                    },
+                  },
+                ])
+                .then((answer) => {
+                  role = answer.role;
+                  connection.query(
+                    "select CONCAT(first_name, ' ', last_name) ManagerName from employee;",
+                    (err, res) => {
+                      if (err) throw err;
+                      inquirer
+                        .prompt([
+                          {
+                            name: "manager",
+                            type: "list",
+                            choices: function () {
+                              let manArray = [];
+                              for (let i = 0; i < res.length; i++) {
+                                manArray.push(res[i].ManagerName);
+                              }
+                              return manArray;
+                            },
+                          },
+                        ])
+                        .then((answer) => {
+                          manager = answer.manager;
+                          connection.query(
+                            `insert into employee (first_name, last_name, role_id, manager_id) with manager as (select id manager_id from employee where CONCAT(first_name, ' ', last_name) = '${manager}') select '${fName}', '${lName}', (select id from role where title = '${role}'), manager_id from manager;`,
+                            (err, res) => {
+                              if (err) throw err;
+                              console.log(`${fName} ${lName} Has Been Added`);
+                              inquirer
+                                .prompt([
+                                  {
+                                    name: "continue",
+                                    type: "list",
+                                    message:
+                                      "Would You Like to Return to the Main Menu or Continue Adding?",
+                                    choices: ["Main Menu", "Continue Adding"],
+                                  },
+                                ])
+                                .then((data) => {
+                                  if (data.continue === "Main Menu") {
+                                    menu();
+                                  } else add();
+                                });
+                            }
+                          );
+                        });
+                    }
+                  );
+                });
+            });
+          }
+        }
+      );
+    });
+}
 
 function empRoleUpdate() {
   connection.query(

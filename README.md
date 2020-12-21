@@ -37,7 +37,7 @@ Application is MIT Licensed. Please feel free to contribute in any way.
 
 ## Tests
 
-Test by created a local instance of the application following the installation instructions above. Then execut "node app.js" and follow the CLI prompts.
+Test by created a local instance of the application following the installation instructions above. Then execute "node app.js" and follow the CLI prompts.
 
 ## License
 
